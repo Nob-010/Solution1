@@ -1,0 +1,147 @@
+﻿@* @{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+ *@
+
+
+@{
+    ViewData["Title"] = "Restaurant List";
+}
+
+<h2>Restaurant List</h2>
+
+<!-- Restoranlar Listesi -->
+<div id="restaurantList">
+    <div class="spinner-border" role="status" id="loadingSpinner">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+<!-- Restoran Ekleme Formu -->
+<h3>Add a Restaurant</h3>
+<form id="restaurantForm">
+    <div class="form-group">
+        <label for="Name">Restaurant Name</label>
+        <input type="text" id="Name" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label for="Address">Address</label>
+        <input type="text" id="Address" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label for="Phone">Phone</label>
+        <input type="text" id="Phone" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Add Restaurant</button>
+</form>
+
+<!-- Rezervasyon Ekleme Formu -->
+<h3>Add a Reservation</h3>
+<form id="reservationForm">
+    <div class="form-group">
+        <label for="RestaurantId">Restaurant</label>
+        <select id="RestaurantId" class="form-control" required>
+            <option value="">Select Restaurant</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="PartySize">Party Size</label>
+        <input type="number" id="PartySize" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label for="DateTime">Reservation Time</label>
+        <input type="datetime-local" id="DateTime" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Add Reservation</button>
+</form>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Restoranları Listele
+            function loadRestaurants() {
+                $("#loadingSpinner").show();
+                $.ajax({
+                    url: '/api/restaurant',
+                    method: 'GET',
+                    success: function (data) {
+                        $("#loadingSpinner").hide();
+                        var restaurants = data;
+                        var htmlContent = '';
+                        restaurants.forEach(function (restaurant) {
+                            htmlContent += `<div class="card" style="width: 18rem;">
+                                                <img src="${restaurant.imagePath}" class="card-img-top" alt="${restaurant.name}">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">${restaurant.name}</h5>
+                                                    <p class="card-text">${restaurant.address}</p>
+                                                </div>
+                                            </div>`;
+                        });
+                        $('#restaurantList').html(htmlContent);
+                    },
+                    error: function () {
+                        $("#loadingSpinner").hide();
+                        $('#restaurantList').html("<p>Error loading restaurants</p>");
+                    }
+                });
+            }
+
+            loadRestaurants();
+
+            // Restoran Ekleme
+            $("#restaurantForm").submit(function (e) {
+                e.preventDefault();
+                var restaurant = {
+                    name: $("#Name").val(),
+                    address: $("#Address").val(),
+                    phone: $("#Phone").val()
+                };
+
+                $.ajax({
+                    url: '/api/restaurant',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(restaurant),
+                    success: function () {
+                        loadRestaurants(); // Yeni restoran ekledikten sonra listeyi güncelle
+                        alert('Restaurant added successfully');
+                    },
+                    error: function () {
+                        alert('Error adding restaurant');
+                    }
+                });
+            });
+
+            // Rezervasyon Ekleme
+            $("#reservationForm").submit(function (e) {
+                e.preventDefault();
+                var reservation = {
+                    restaurantId: $("#RestaurantId").val(),
+                    partySize: $("#PartySize").val(),
+                    dateTime: $("#DateTime").val()
+                };
+
+                $.ajax({
+                    url: '/api/reservation',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(reservation),
+                    success: function () {
+                        alert('Reservation added successfully');
+                    },
+                    error: function () {
+                        alert('Error adding reservation');
+                    }
+                });
+            });
+        });
+    </script>
+}
+
